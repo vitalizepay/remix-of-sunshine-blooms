@@ -473,7 +473,7 @@ function Admissions() {
           className="rounded-[2rem] bg-white p-6 shadow-pop md:p-8"
         >
           <h3 className="font-display text-2xl font-bold">Enquiry Form</h3>
-          <p className="text-sm text-muted-foreground">Submitting will open your email app to send us your enquiry.</p>
+          <p className="text-sm text-muted-foreground">Fill in the details — we'll get back to you within 24 hours.</p>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <Input label="Student Name" value={form.student} onChange={(v)=>setForm({...form,student:v})} required />
             <Input label="Parent Name" value={form.parent} onChange={(v)=>setForm({...form,parent:v})} required />
