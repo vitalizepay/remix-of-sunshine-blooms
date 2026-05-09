@@ -397,19 +397,49 @@ function Testimonials() {
   );
 }
 
-/* ---------- ADMISSIONS ---------- */
+/* ---------- ADMISSIONS ----------
+ * Enquiry form delivers submissions straight to EMAIL (above) using
+ * FormSubmit.co — a free, no-signup service that works perfectly on
+ * GitHub Pages (purely static). To change the recipient, just edit the
+ * EMAIL constant near the top of this file. The FIRST submission to a new
+ * email triggers a one-time confirmation link sent by FormSubmit — click
+ * it once and all future enquiries land directly in your inbox.
+ */
 function Admissions() {
   const [form, setForm] = useState({ student: "", parent: "", age: "", program: "Play Group", phone: "", message: "" });
-  const [sent, setSent] = useState(false);
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const subject = encodeURIComponent(`Admission Enquiry — ${form.student || "New Student"} (${form.program})`);
-    const body = encodeURIComponent(
-      `Hi Sunshine Pre School,\n\nI'd like to enquire about admissions.\n\nStudent Name: ${form.student}\nParent Name: ${form.parent}\nChild's Age: ${form.age}\nProgram: ${form.program}\nPhone: ${form.phone}\n\nMessage:\n${form.message}\n\nThank you!`
-    );
-    window.location.href = `mailto:${EMAIL}?subject=${subject}&body=${body}`;
-    setSent(true);
+    setStatus("sending");
+    try {
+      const res = await fetch(`https://formsubmit.co/ajax/${EMAIL}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          _subject: `Admission Enquiry — ${form.student || "New Student"} (${form.program})`,
+          _template: "table",
+          _captcha: "false",
+          "Student Name": form.student,
+          "Parent Name": form.parent,
+          "Child's Age": form.age,
+          Program: form.program,
+          Phone: form.phone,
+          Message: form.message || "(none)",
+        }),
+      });
+      if (!res.ok) throw new Error("Network error");
+      setStatus("sent");
+      setForm({ student: "", parent: "", age: "", program: "Play Group", phone: "", message: "" });
+    } catch {
+      // Fallback: open user's email client
+      const subject = encodeURIComponent(`Admission Enquiry — ${form.student || "New Student"} (${form.program})`);
+      const body = encodeURIComponent(
+        `Student Name: ${form.student}\nParent Name: ${form.parent}\nChild's Age: ${form.age}\nProgram: ${form.program}\nPhone: ${form.phone}\n\nMessage:\n${form.message}`
+      );
+      window.location.href = `mailto:${EMAIL}?subject=${subject}&body=${body}`;
+      setStatus("error");
+    }
   };
 
   return (
@@ -443,7 +473,7 @@ function Admissions() {
           className="rounded-[2rem] bg-white p-6 shadow-pop md:p-8"
         >
           <h3 className="font-display text-2xl font-bold">Enquiry Form</h3>
-          <p className="text-sm text-muted-foreground">Submitting will open your email app to send us your enquiry.</p>
+          <p className="text-sm text-muted-foreground">Fill in the details — we'll get back to you within 24 hours.</p>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <Input label="Student Name" value={form.student} onChange={(v)=>setForm({...form,student:v})} required />
             <Input label="Parent Name" value={form.parent} onChange={(v)=>setForm({...form,parent:v})} required />
@@ -469,9 +499,18 @@ function Admissions() {
               />
             </div>
           </div>
-          <button type="submit" className="mt-6 w-full rounded-2xl bg-blue-grad py-3.5 font-fun font-bold text-white shadow-soft transition hover:scale-[1.02]">
-            {sent ? "Sent! ✓" : "Submit Enquiry"}
+          <button
+            type="submit"
+            disabled={status === "sending"}
+            className="mt-6 w-full rounded-2xl bg-blue-grad py-3.5 font-fun font-bold text-white shadow-soft transition hover:scale-[1.02] disabled:opacity-70"
+          >
+            {status === "sending" ? "Sending…" : status === "sent" ? "Enquiry sent! ✓ We'll be in touch." : "Submit Enquiry"}
           </button>
+          {status === "error" && (
+            <p className="mt-3 text-center text-xs text-muted-foreground">
+              Couldn't send automatically — your email app has been opened as a backup.
+            </p>
+          )}
         </motion.form>
       </div>
     </section>
