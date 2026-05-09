@@ -499,9 +499,18 @@ function Admissions() {
               />
             </div>
           </div>
-          <button type="submit" className="mt-6 w-full rounded-2xl bg-blue-grad py-3.5 font-fun font-bold text-white shadow-soft transition hover:scale-[1.02]">
-            {sent ? "Sent! ✓" : "Submit Enquiry"}
+          <button
+            type="submit"
+            disabled={status === "sending"}
+            className="mt-6 w-full rounded-2xl bg-blue-grad py-3.5 font-fun font-bold text-white shadow-soft transition hover:scale-[1.02] disabled:opacity-70"
+          >
+            {status === "sending" ? "Sending…" : status === "sent" ? "Enquiry sent! ✓ We'll be in touch." : "Submit Enquiry"}
           </button>
+          {status === "error" && (
+            <p className="mt-3 text-center text-xs text-muted-foreground">
+              Couldn't send automatically — your email app has been opened as a backup.
+            </p>
+          )}
         </motion.form>
       </div>
     </section>
